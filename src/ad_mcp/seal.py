@@ -24,7 +24,7 @@ public keys are loaded from a directory or a single PEM file
 
 CLI:
     python -m ad_mcp.seal --pubkey seal_pub.pem --user svc_admcp_admin \
-        --dn "CN=admcp-admin,OU=...,DC=wei,DC=local"
+        --dn "CN=admcp-admin,OU=...,DC=corp,DC=example,DC=com"
     # prompts for password, prints the sealed blob to paste into config
 
     python -m ad_mcp.seal --genkeys seal_pub.pem seal_priv.pem

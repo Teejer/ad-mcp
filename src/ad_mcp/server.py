@@ -1739,7 +1739,7 @@ sysvol = _sysvol.SysvolClient()
 
 
 def _domain_dns_name() -> str:
-    """DC=wei,DC=local -> wei.local"""
+    """DC=corp,DC=example,DC=com -> corp.example.com"""
     return ".".join(v for _, v, _ in parse_dn(cfg.base_dn))
 
 

@@ -1,9 +1,12 @@
 ﻿# ============================================================================
 # delegate-admcp-gpo-read.ps1
 #
-# Read-only ADDITIVE delegation for the AD MCP GPO tools, via a group:
+# Read-only ADDITIVE delegation for the AD MCP GPO tools, via a group.
 #
-#   CN=GPO_MCP Readers,OU=GPO Security Filtering Groups,OU=Groups,...
+# EDIT THESE THREE for your environment (or pass them as parameters):
+#   $ReaderGroup     = DN of the group the read ACEs are granted to
+#   $MemberAccount   = sAMAccountName of the MCP escalation service account
+#   $SysvolPoliciesPath = \\<<domain>>\SYSVOL\<<domain>>\Policies
 #
 # This script only ever ADDS things:
 #   * membership of $MemberAccount in $ReaderGroup (if not already present)
@@ -35,12 +38,17 @@
 [CmdletBinding()]
 param(
     # Group the read ACEs are granted to (accepts DN, name, or sAMAccountName).
-    [string]$ReaderGroup = 'CN=GPO_MCP Readers,OU=GPO Security Filtering Groups,OU=Groups,OU=Secured Users and Groups,DC=wei,DC=local',
+    # >>> EDIT: DN of YOUR reader group, e.g.
+    #     'CN=GPO MCP Readers,OU=Groups,DC=corp,DC=example,DC=com'
+    [string]$ReaderGroup = 'CN=<EDIT-ME GPO MCP Readers>,DC=<domain>,DC=<com>',
 
     # Ensure the MCP escalation account is a member of that group.
-    [string]$MemberAccount = 'svc_admcpprivservice',
+    # >>> EDIT: the service account that AD_PRIV_DN points at.
+    [string]$MemberAccount = '<EDIT-ME svc_admcp_priv>',
 
-    [string]$SysvolPoliciesPath = '\\wei.local\SYSVOL\wei.local\Policies',
+    # Only used with -IncludeSysvol.
+    # >>> EDIT: \\FQDN\SYSVOL\FQDN\Policies
+    [string]$SysvolPoliciesPath = '\\<EDIT-ME domain.fqdn>\SYSVOL\<domain>\Policies',
 
     # Catches mistyped flags (e.g. --apply): they land here because no other
     # positional parameter is defined, and we error out instead of silently

@@ -1,7 +1,7 @@
-# ============================================================================
+﻿# ============================================================================
 # delegate-admcp-read.ps1
 #
-# Grants the AD MCP privileged service account (svc_adMCPPrivService) the
+# Grants the AD MCP privileged service account the
 # minimum permissions needed to READ every GPO in the domain, including ones
 # hidden from normal accounts by per-object "Deny Read all properties" ACEs:
 #
@@ -12,7 +12,7 @@
 #      for "Read all properties" + LIST + open, on "all descendant objects"
 #      (belt-and-suspenders: works even if group membership changes later).
 #   3. Removes explicit DENY ACEs on individual GPOs that name Domain Users /
-#      Authenticated Users / Everyone — these are what actually hides GPO
+#      Authenticated Users / Everyone -- these are what actually hides GPO
 #      names from the base service account. (Reported only, unless -Reconcile.)
 #   4. SYSVOL read on the Policies folder (needed by get_gpo_settings for
 #      Registry.pol / GptTmpl.inf parsing).
@@ -34,8 +34,11 @@
 
 [CmdletBinding()]
 param(
-    [string]$ServiceAccount = 'wei\svc_admcpprivservice',   # DOWNCASE sam: AD matches case-insensitively
-    [string]$SysvolPoliciesPath = '\\wei.local\SYSVOL\wei.local\Policies',
+    # >>> EDIT: DOMAIN\sAMAccountName of the MCP privileged service account
+    #     (DOWNCASE sam: AD matches case-insensitively)
+    [string]$ServiceAccount = '<EDIT-ME DOMAIN>\svc_admcp_priv',
+    # >>> EDIT: \\FQDN\SYSVOL\FQDN\Policies
+    [string]$SysvolPoliciesPath = '\\<EDIT-ME domain.fqdn>\SYSVOL\<domain>\Policies',
     [switch]$Apply,          # actually make changes (default: WhatIf preview)
     [switch]$RemoveDenies    # also strip deny ACEs naming Domain Users / Authenticated Users / Everyone from GPO objects
 )
@@ -49,7 +52,7 @@ Import-Module ActiveDirectory -ErrorAction Stop
 $domain  = (Get-ADDomain).DNSRoot
 $baseDN  = (Get-ADDomain).DistinguishedName
 $policiesContainer = "CN=Policies,CN=System,$baseDN"
-$sddlOwner = 'OU=MCP,OU=Service Accounts,OU=Secured Users and Groups,' + $baseDN   # just for reporting
+$sddlOwner = '' + $baseDN   # just for reporting
 
 # ---------------------------------------------------------------------------
 Step "1/4  Group Policy Creator Owners membership for $ServiceAccount"
@@ -58,7 +61,7 @@ try {
     $acct = Get-ADUser -Identity ($ServiceAccount -replace '^.*\\','') -ErrorAction Stop
     Ok ("Account found: " + $acct.DistinguishedName)
 } catch {
-    Write-Error "Service account '$ServiceAccount' not found — fix -ServiceAccount and re-run."; exit 1
+    Write-Error "Service account '$ServiceAccount' not found -- fix -ServiceAccount and re-run."; exit 1
 }
 
 $gpoGroup = Get-ADGroup -Identity 'Group Policy Creator Owners' -ErrorAction SilentlyContinue
@@ -171,7 +174,7 @@ if ($denyReport.Count -eq 0) {
         }
     } else {
         Warn "GPOs above have deny ACEs. Re-run with -Apply -RemoveDenies to strip them."
-        Warn "If denies name only your service account (not generic groups), you must remove them manually — an Allow cannot override them."
+        Warn "If denies name only your service account (not generic groups), you must remove them manually -- an Allow cannot override them."
     }
 }
 

@@ -35,10 +35,10 @@ REG_MULTI_SZ = 7
 
 @dataclass
 class SysvolCreds:
-    server: str          # DNS domain name hosting \\server\SYSVOL, e.g. wei.local
+    server: str          # DNS domain name hosting \\server\SYSVOL, e.g. corp.example.com
     username: str        # sAMAccountName (NOT the CN)
     password: str
-    domain: str          # netBIOS/UPN suffix for NTLM, e.g. wei.local
+    domain: str          # netBIOS/UPN suffix for NTLM, e.g. corp.example.com
     base: str            # r"\\server\SYSVOL\<dns-domain>"
 
 

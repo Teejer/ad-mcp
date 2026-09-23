@@ -1,16 +1,19 @@
 # Active Directory MCP server
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that lets an
-AI assistant query your Active Directory — users, groups, computers, OUs — and
-(optionally) make guarded group-membership changes. Talks to **real AD LDAP**
-(Windows AD or Samba AD DC): `objectCategory=person` filters,
-`LDAP_MATCHING_RULE_IN_CHAIN` (`1.2.840.113556.1.4.803`) matching rules,
-`sAMAccountName`/`userPrincipalName`/`dNSHostName` resolution, AD large-member
-auto-ranging, and FILETIME timestamps.
+AI assistant query your Active Directory — users, groups, computers, OUs, and
+Group Policy objects — and (optionally) make guarded group-membership changes.
+Talks to **real AD LDAP** (Windows AD or Samba AD DC): `objectCategory=person`
+filters, `LDAP_MATCHING_RULE_IN_CHAIN` (`1.2.840.113556.1.4.803`) matching
+rules, `sAMAccountName`/`userPrincipalName`/`dNSHostName` resolution, AD
+large-member auto-ranging, FILETIME timestamps, and GPO discovery that works
+even when `CN=Policies` listing is denied. GPO *settings* are read from SYSVOL
+over SMB with a from-scratch `Registry.pol` parser (reverse-engineered against
+real domain controller output, including cert-store binary blobs).
 
 ## Tools
 
-Read-only (always available):
+Read-only (always available, 23 tools):
 
 | Tool | Description |
 | --- | --- |
@@ -27,6 +30,11 @@ Read-only (always available):
 | `list_ous` | OUs with depth under the base DN |
 | `get_inactive_users` | Enabled accounts idle for N days (lastLogonTimestamp) |
 | `get_privileged_groups` | Well-known admin groups (Domain Admins etc.) with member counts |
+| `list_gpos` / `get_gpo_links` | GPO inventory (incl. ACL-hidden ones, flagged) and where each is linked |
+| `get_computer_gpos` / `get_user_gpos` | GPOs applied to a computer/user in precedence order, OU-chain view, Enforced/No-Override, WMI filter, version sync |
+| `get_gpo_settings` | What a GPO *does*, read from SYSVOL over SMB: GptTmpl.inf rights/options, Registry.pol entries (strings, dwords, cert-store blobs), scripts, preferences, GPT.INI version cross-check |
+| `test_sysvol` | SYSVOL share connectivity check |
+| `test_privileged` | Escalation config status + how many hidden GPOs an elevated bind reveals |
 | `raw_ldap_search` | Escape hatch — raw filter, hard-constrained to the base DN |
 
 Writes (only registered when `AD_ALLOW_WRITES=true`):
@@ -199,13 +207,14 @@ group members; deny ACEs are only reported):
    GPO container/objects so the GPO tools and escalation work).
 2. `delegate-admcp-gpo-read.ps1 [-IncludeSysvol] -Apply` — grants
    `ReadProperty + ReadControl + ExtendedRight + ListChildren` on each GPO
-   object to `GPO_MCP Readers` (which contains `svc_admcpprivservice`), so
-   `escalate=true` reveals ACL-hidden GPOs. Re-run it after new GPOs are
-   created; it skips objects that already carry the ACE. `-IncludeSysvol`
-   additionally grants read on the GPO's SYSVOL `Policies\<GUID>` folder
-   (off by default — SYSVOL reads for the *plain* service account already
-   work through normal Authenticated Users permissions; the per-GPO grant
-   only matters if you lock SYSVOL down later).
+   object to your reader group (`-ReaderGroup`, which should contain the
+   account in `AD_PRIV_DN`), so `escalate=true` reveals ACL-hidden GPOs.
+   Re-run it after new GPOs are created; it skips objects that already
+   carry the ACE. `-IncludeSysvol` additionally grants read on the GPO's
+   SYSVOL `Policies\<GUID>` folder (off by default — SYSVOL reads for the
+   *plain* service account already work through normal Authenticated Users
+   permissions; the per-GPO grant only matters if you lock SYSVOL down
+   later).
 
 ## Privileged escalation & secrets
 
@@ -221,12 +230,12 @@ ad-mcp-seal genkeys seal_pub.pem seal_priv.pem
 
 # 2) seal the privileged account's password (operator-side; prompts securely)
 ad-mcp-seal seal --pubkey seal_pub.pem --user svc_admcp_admin \
-    --dn "CN=admcp-admin,OU=...,DC=wei,DC=local" --expires-days 90
+    --dn "CN=admcp-admin,OU=...,DC=corp,DC=example,DC=com" --expires-days 90
 # -> prints a sealed blob (RSA-OAEP-SHA256, replayable but not decryptable
 #    without the private key)
 
 # 3) server config
-AD_PRIV_DN=CN=admcp-admin,OU=...,DC=wei,DC=local
+AD_PRIV_DN=CN=admcp-admin,OU=...,DC=corp,DC=example,DC=com
 AD_PRIV_SEAL=<the sealed blob>        # or {file:/path}, {env:VAR}, {plain:...}
 AD_SEAL_KEY_FILE=/secure/seal_priv.pem   # private key; only here if you want
                                          # sealed escalation on this host
