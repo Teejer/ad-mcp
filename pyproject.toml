@@ -1,0 +1,22 @@
+[project]
+name = "ad-mcp"
+version = "0.1.0"
+description = "Read-only-first MCP server for querying Active Directory users, groups, and computers"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.2.0,<2",
+    "ldap3>=2.9",
+    "cryptography>=42",
+    "smbprotocol>=1.13",
+]
+
+[project.scripts]
+ad-mcp = "ad_mcp.server:main"
+ad-mcp-seal = "ad_mcp.seal:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

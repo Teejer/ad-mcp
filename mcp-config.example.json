@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "active-directory": {
+      "env": {
+        "AD_HOSTS": "dc1.example.com",
+        "AD_BIND_DN": "CN=svc_admcp,OU=Service Accounts,DC=example,DC=com",
+        "AD_BIND_PASSWORD": "{file:/home/you/.config/ad-mcp/svc-admcp}",
+        "AD_BASE_DN": "DC=example,DC=com",
+        "AD_USE_SSL": "true",
+        "AD_PORT": "636",
+        "AD_ALLOW_SELF_SIGNED": "true",
+        "AD_MAX_RESULTS": "200",
+        "AD_PRIV_DN": "",
+        "AD_PRIV_SEAL": "{file:$CREDENTIALS_DIRECTORY/adpriv}"
+      }
+    }
+  }
+}
