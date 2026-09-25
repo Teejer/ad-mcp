@@ -281,3 +281,20 @@ Secret backends that work out of the box:
   links only.
 - Writes are intentionally limited to group membership. Password resets and
   account creation are out of scope for an LLM-driven tool by design.
+
+## License
+
+Copyright © 2026 Teejer. All rights reserved.
+
+This software is licensed under the
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
+In short:
+
+- **Free** for personal use (hobby projects, home labs, research, learning)
+  and for non-commercial organizations — including non-profit and
+  educational institutions.
+- **Not free** for commercial use. Any use by or on behalf of a business or
+  other commercial organization requires a separate paid license.
+
+To obtain a commercial license, contact the copyright holder at
+[teej.d.man@gmail.com](mailto:teej.d.man@gmail.com).

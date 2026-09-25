@@ -2,6 +2,8 @@
 name = "ad-mcp"
 version = "0.1.0"
 description = "Read-only-first MCP server for querying Active Directory users, groups, and computers"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = [
     "mcp[cli]>=1.2.0,<2",
@@ -15,7 +17,7 @@ ad-mcp = "ad_mcp.server:main"
 ad-mcp-seal = "ad_mcp.seal:main"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
